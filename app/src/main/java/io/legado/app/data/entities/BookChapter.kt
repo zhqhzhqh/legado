@@ -7,7 +7,6 @@ import androidx.room.Ignore
 import androidx.room.Index
 import com.github.liuyueyi.quick.transfer.ChineseUtils
 import io.legado.app.R
-import io.legado.app.constant.AppLog
 import io.legado.app.constant.AppPattern
 import io.legado.app.help.config.AppConfig
 import io.legado.app.model.analyzeRule.AnalyzeUrl
@@ -45,7 +44,7 @@ data class BookChapter(
     var end: Long? = null,              // 章节终止位置
     var startFragmentId: String? = null,  //EPUB书籍当前章节的fragmentId
     var endFragmentId: String? = null,    //EPUB书籍下一章节的fragmentId
-    var variable: String? = null        //变量
+    override var variable: String? = null        //变量
 ) : Parcelable, RuleDataInterface {
 
     @delegate:Transient
@@ -56,16 +55,12 @@ data class BookChapter(
     }
 
     override fun putVariable(key: String, value: String?) {
-        if (value != null) {
-            if (value.length > 1000) {
-                AppLog.put("${title}设置变量长度超过1000,设置失败")
-                return
-            }
-            variableMap[key] = value
-        } else {
-            variableMap.remove(key)
-        }
+        super.putVariable(key, value)
         variable = GSON.toJson(variableMap)
+    }
+
+    override fun putBigVariable(key: String, value: String) {
+
     }
 
     override fun hashCode() = url.hashCode()
