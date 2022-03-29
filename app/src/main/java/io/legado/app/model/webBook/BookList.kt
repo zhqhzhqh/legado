@@ -5,9 +5,9 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.data.entities.rule.BookListRule
+import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.BookHelp
 import io.legado.app.model.Debug
-import io.legado.app.model.NoStackTraceException
 import io.legado.app.model.analyzeRule.AnalyzeRule
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.analyzeRule.RuleData
@@ -229,8 +229,10 @@ object BookList {
             Debug.log(bookSource.bookSourceUrl, "┌获取封面链接", log)
             try {
                 analyzeRule.getString(ruleCoverUrl).let {
-                    if (it.isNotEmpty()) searchBook.coverUrl =
-                        NetworkUtils.getAbsoluteURL(baseUrl, it)
+                    if (it.isNotEmpty()) {
+                        searchBook.coverUrl =
+                            NetworkUtils.getAbsoluteURL(baseUrl, it)
+                    }
                 }
                 Debug.log(bookSource.bookSourceUrl, "└${searchBook.coverUrl}", log)
             } catch (e: java.lang.Exception) {
