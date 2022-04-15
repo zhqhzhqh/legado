@@ -6,8 +6,11 @@ import io.legado.app.data.appDb
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.ReplaceRule
+import io.legado.app.exception.RegexTimeoutException
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
+import io.legado.app.utils.msg
+import io.legado.app.utils.replace
 import io.legado.app.utils.toastOnUi
 import splitties.init.appCtx
 import java.lang.ref.WeakReference
@@ -67,7 +70,7 @@ class ContentProcessor private constructor(
         return contentReplaceRules
     }
 
-    fun getContent(
+    suspend fun getContent(
         book: Book,
         chapter: BookChapter,
         content: String,
@@ -128,19 +131,28 @@ class ContentProcessor private constructor(
         return contents
     }
 
-    fun replaceContent(content: String): String {
+    suspend fun replaceContent(content: String): String {
         var mContent = content
         getContentReplaceRules().forEach { item ->
             if (item.pattern.isNotEmpty()) {
-                try {
+                kotlin.runCatching {
                     mContent = if (item.isRegex) {
-                        mContent.replace(item.pattern.toRegex(), item.replacement)
+                        mContent.replace(item.pattern.toRegex(), item.replacement, 2000L)
                     } else {
                         mContent.replace(item.pattern, item.replacement)
                     }
-                } catch (e: Exception) {
-                    AppLog.put("${item.name}替换出错\n${e.localizedMessage}")
-                    appCtx.toastOnUi("${item.name}替换出错")
+                }.onFailure {
+                    when (it) {
+                        is RegexTimeoutException -> {
+                            item.isEnabled = false
+                            appDb.replaceRuleDao.update(item)
+                            return item.name + it.msg
+                        }
+                        else -> {
+                            AppLog.put("${item.name}替换出错\n${it.localizedMessage}", it)
+                            appCtx.toastOnUi("${item.name}替换出错")
+                        }
+                    }
                 }
             }
         }

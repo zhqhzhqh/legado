@@ -2,6 +2,7 @@ package io.legado.app.model.localBook
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.text.TextUtils
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
@@ -20,10 +21,11 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.nio.charset.Charset
+import java.util.zip.ZipFile
 
 class EpubFile(var book: Book) {
 
-    companion object {
+    companion object : BaseLocalBookParse {
         private var eFile: EpubFile? = null
 
         @Synchronized
@@ -39,17 +41,17 @@ class EpubFile(var book: Book) {
         }
 
         @Synchronized
-        fun getChapterList(book: Book): ArrayList<BookChapter> {
+        override fun getChapterList(book: Book): ArrayList<BookChapter> {
             return getEFile(book).getChapterList()
         }
 
         @Synchronized
-        fun getContent(book: Book, chapter: BookChapter): String? {
+        override fun getContent(book: Book, chapter: BookChapter): String? {
             return getEFile(book).getContent(chapter)
         }
 
         @Synchronized
-        fun getImage(
+        override fun getImage(
             book: Book,
             href: String
         ): InputStream? {
@@ -57,7 +59,7 @@ class EpubFile(var book: Book) {
         }
 
         @Synchronized
-        fun upBookInfo(book: Book) {
+        override fun upBookInfo(book: Book) {
             return getEFile(book).upBookInfo()
         }
     }
@@ -101,9 +103,17 @@ class EpubFile(var book: Book) {
     /*重写epub文件解析代码，直接读出压缩包文件生成Resources给epublib，这样的好处是可以逐一修改某些文件的格式错误*/
     private fun readEpub(): EpubBook? {
         try {
-            val bis = LocalBook.getBookInputStream(book)
-            //通过懒加载读取epub
-            return EpubReader().readEpub(bis, "utf-8")
+            val uri = Uri.parse(book.bookUrl)
+            return if (uri.isContentScheme()) {
+                //高版本的手机内存一般足够大，直接加载到内存中最快
+                EpubReader().readEpub(LocalBook.getBookInputStream(book), "utf-8")
+            } else {
+                //低版本的使用懒加载
+                EpubReader().readEpubLazy(ZipFile(uri.path), "utf-8")
+
+            }
+
+
         } catch (e: Exception) {
             e.printOnDebug()
         }

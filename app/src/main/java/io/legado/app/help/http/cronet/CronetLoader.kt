@@ -34,13 +34,14 @@ object CronetLoader : CronetEngine.Builder.LibraryLoader() {
     private var cpuAbi: String? = null
     private var md5: String
     var download = false
+
     @Volatile
     private var cacheInstall = false
 
     init {
         soUrl = ("https://storage.googleapis.com/chromium-cronet/android/"
-            + soVersion + "/Release/cronet/libs/"
-            + getCpuAbi(appCtx) + "/" + soName)
+                + soVersion + "/Release/cronet/libs/"
+                + getCpuAbi(appCtx) + "/" + soName)
         md5 = getMd5(appCtx)
         val dir = appCtx.getDir("cronet", Context.MODE_PRIVATE)
         soFile = File(dir.toString() + "/" + getCpuAbi(appCtx), soName)
@@ -55,9 +56,12 @@ object CronetLoader : CronetEngine.Builder.LibraryLoader() {
      * 判断Cronet是否安装完成
      */
     fun install(): Boolean {
-        if (cacheInstall) {
-            return true
+        synchronized(this) {
+            if (cacheInstall) {
+                return true
+            }
         }
+
         if (AppConfig.isGooglePlay) {
             return false
         }
@@ -264,7 +268,8 @@ object CronetLoader : CronetEngine.Builder.LibraryLoader() {
             return
         }
         download = true
-        executor.execute {
+
+        Coroutine.async {
             val result = downloadFileIfNotExist(url, downloadTempFile)
             DebugLog.d(javaClass.simpleName, "download result:$result")
             //文件md5再次校验
@@ -275,7 +280,7 @@ object CronetLoader : CronetEngine.Builder.LibraryLoader() {
                     downloadTempFile.deleteOnExit()
                 }
                 download = false
-                return@execute
+                return@async
             }
             DebugLog.d(javaClass.simpleName, "download success, copy to $destSuccessFile")
             //下载成功拷贝文件
@@ -285,6 +290,9 @@ object CronetLoader : CronetEngine.Builder.LibraryLoader() {
             @Suppress("SameParameterValue")
             deleteHistoryFile(parentFile!!, null)
         }
+//        executor.execute {
+//
+//        }
     }
 
     /**

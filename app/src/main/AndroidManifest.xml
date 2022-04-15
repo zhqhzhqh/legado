@@ -249,7 +249,7 @@
             android:screenOrientation="behind" />
         <!-- 书籍管理 -->
         <activity
-            android:name=".ui.book.arrange.ArrangeBookActivity"
+            android:name=".ui.book.manage.BookshelfManageActivity"
             android:launchMode="singleTop"
             android:screenOrientation="behind" />
         <!-- 书源调试 -->
@@ -292,6 +292,10 @@
         <!-- Rss收藏 -->
         <activity
             android:name=".ui.rss.favorites.RssFavoritesActivity"
+            android:launchMode="singleTop" />
+        <!-- 书签 -->
+        <activity
+            android:name=".ui.book.bookmark.AllBookmarkActivity"
             android:launchMode="singleTop" />
         <!-- 缓存界面 -->
         <activity

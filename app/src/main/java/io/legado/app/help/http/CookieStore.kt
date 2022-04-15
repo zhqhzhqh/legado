@@ -10,6 +10,9 @@ import io.legado.app.utils.NetworkUtils
 
 object CookieStore : CookieManager {
 
+    /**
+     *保存cookie到数据库，会自动识别url的二级域名
+     */
     override fun setCookie(url: String, cookie: String?) {
         val cookieBean = Cookie(NetworkUtils.getSubDomain(url), cookie ?: "")
         appDb.cookieDao.insert(cookieBean)
@@ -30,11 +33,14 @@ object CookieStore : CookieManager {
         }
     }
 
+    /**
+     *获取url所属的二级域名的cookie
+     */
     override fun getCookie(url: String): String {
         val cookieBean = appDb.cookieDao.get(NetworkUtils.getSubDomain(url))
         return cookieBean?.cookie ?: ""
     }
-    
+
     fun getKey(url: String, key: String): String {
         val cookie = getCookie(url)
         val cookieMap = cookieToMap(cookie)

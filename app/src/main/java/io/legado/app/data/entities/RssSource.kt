@@ -63,18 +63,18 @@ data class RssSource(
 
     fun equal(source: RssSource): Boolean {
         return equal(sourceUrl, source.sourceUrl)
-            && equal(sourceIcon, source.sourceIcon)
-            && enabled == source.enabled
-            && equal(sourceGroup, source.sourceGroup)
-            && equal(ruleArticles, source.ruleArticles)
-            && equal(ruleNextPage, source.ruleNextPage)
-            && equal(ruleTitle, source.ruleTitle)
-            && equal(rulePubDate, source.rulePubDate)
-            && equal(ruleDescription, source.ruleDescription)
-            && equal(ruleLink, source.ruleLink)
-            && equal(ruleContent, source.ruleContent)
-            && enableJs == source.enableJs
-            && loadWithBaseUrl == source.loadWithBaseUrl
+                && equal(sourceIcon, source.sourceIcon)
+                && enabled == source.enabled
+                && equal(sourceGroup, source.sourceGroup)
+                && equal(ruleArticles, source.ruleArticles)
+                && equal(ruleNextPage, source.ruleNextPage)
+                && equal(ruleTitle, source.ruleTitle)
+                && equal(rulePubDate, source.rulePubDate)
+                && equal(ruleDescription, source.ruleDescription)
+                && equal(ruleLink, source.ruleLink)
+                && equal(ruleContent, source.ruleContent)
+                && enableJs == source.enableJs
+                && loadWithBaseUrl == source.loadWithBaseUrl
     }
 
     private fun equal(a: String?, b: String?): Boolean {
@@ -121,7 +121,7 @@ data class RssSource(
     @Suppress("MemberVisibilityCanBePrivate")
     companion object {
 
-        fun fromJsonDoc(doc: DocumentContext): RssSource? {
+        fun fromJsonDoc(doc: DocumentContext): Result<RssSource> {
             return kotlin.runCatching {
                 val loginUi = doc.read<Any>("$.loginUi")
                 RssSource(
@@ -152,23 +152,25 @@ data class RssSource(
                     loadWithBaseUrl = doc.readBool("$.loadWithBaseUrl") ?: true,
                     customOrder = doc.readInt("$.customOrder") ?: 0
                 )
-            }.getOrNull()
+            }
         }
 
-        fun fromJson(json: String): RssSource? {
+        fun fromJson(json: String): Result<RssSource> {
             return fromJsonDoc(jsonPath.parse(json))
         }
 
-        fun fromJsonArray(jsonArray: String): ArrayList<RssSource> {
-            val sources = arrayListOf<RssSource>()
-            val doc = jsonPath.parse(jsonArray).read<List<*>>("$")
-            doc.forEach {
-                val jsonItem = jsonPath.parse(it)
-                fromJsonDoc(jsonItem)?.let { source ->
-                    sources.add(source)
+        fun fromJsonArray(jsonArray: String): Result<ArrayList<RssSource>> {
+            return kotlin.runCatching {
+                val sources = arrayListOf<RssSource>()
+                val doc = jsonPath.parse(jsonArray).read<List<*>>("$")
+                doc.forEach {
+                    val jsonItem = jsonPath.parse(it)
+                    fromJsonDoc(jsonItem).getOrThrow().let { source ->
+                        sources.add(source)
+                    }
                 }
+                sources
             }
-            return sources
         }
     }
 

@@ -276,13 +276,19 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
     val autoChangeSource: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.autoChangeSource, true)
 
-    val changeSourceLoadInfo get() = appCtx.getPrefBoolean(PreferKey.changeSourceLoadInfo)
+    var changeSourceLoadInfo: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.changeSourceLoadInfo)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.changeSourceLoadInfo, value)
+        }
 
-    val changeSourceLoadToc get() = appCtx.getPrefBoolean(PreferKey.changeSourceLoadToc)
+    var changeSourceLoadToc: Boolean
+        get() = appCtx.getPrefBoolean(PreferKey.changeSourceLoadToc)
+        set(value) {
+            appCtx.putPrefBoolean(PreferKey.changeSourceLoadToc, value)
+        }
 
     val importKeepName get() = appCtx.getPrefBoolean(PreferKey.importKeepName)
-
-    val syncBookProgress get() = appCtx.getPrefBoolean(PreferKey.syncBookProgress, true)
 
     var preDownloadNum
         get() = appCtx.getPrefInt(PreferKey.preDownloadNum, 10)
@@ -298,10 +304,16 @@ object AppConfig : SharedPreferences.OnSharedPreferenceChangeListener {
 
     val recordLog get() = appCtx.getPrefBoolean(PreferKey.recordLog)
 
-    val loadOnlyWifi = appCtx.getPrefBoolean(PreferKey.loadCoverOnlyWifi, false)
+    val loadCoverOnlyWifi = appCtx.getPrefBoolean(PreferKey.loadCoverOnlyWifi, false)
 
     val doublePageHorizontal: Boolean
         get() = appCtx.getPrefBoolean(PreferKey.doublePageHorizontal, true)
+
+    var searchGroup: String
+        get() = appCtx.getPrefString("searchGroup") ?: ""
+        set(value) {
+            appCtx.putPrefString("searchGroup", value)
+        }
 
     private fun getPrefUserAgent(): String {
         val ua = appCtx.getPrefString(PreferKey.userAgent)

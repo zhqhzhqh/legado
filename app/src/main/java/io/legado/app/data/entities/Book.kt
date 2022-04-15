@@ -6,6 +6,8 @@ import io.legado.app.constant.AppPattern
 import io.legado.app.constant.BookType
 import io.legado.app.constant.PageAnim
 import io.legado.app.data.appDb
+import io.legado.app.help.BookHelp
+import io.legado.app.help.ContentProcessor
 import io.legado.app.help.config.AppConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.model.ReadBook
@@ -191,7 +193,14 @@ data class Book(
     }
 
     fun getUseReplaceRule(): Boolean {
-        return config.useReplaceRule ?: AppConfig.replaceEnableDefault
+        val useReplaceRule = config.useReplaceRule
+        if (useReplaceRule != null) {
+            return useReplaceRule
+        }
+        if (type == BookType.image) {
+            return false
+        }
+        return AppConfig.replaceEnableDefault
     }
 
     fun setReSegment(reSegment: Boolean) {
@@ -271,7 +280,13 @@ data class Book(
         this.tocHtml = this@Book.tocHtml
     }
 
-    fun changeTo(newBook: Book) {
+    fun changeTo(newBook: Book, toc: List<BookChapter>): Book {
+        newBook.durChapterIndex = BookHelp
+            .getDurChapter(durChapterIndex, durChapterTitle, toc, totalChapterNum)
+        newBook.durChapterTitle = toc[newBook.durChapterIndex].getDisplayTitle(
+            ContentProcessor.get(newBook.name, newBook.origin).getTitleReplaceRules()
+        )
+        newBook.durChapterPos = durChapterPos
         newBook.group = group
         newBook.order = order
         newBook.customCoverUrl = customCoverUrl
@@ -279,23 +294,7 @@ data class Book(
         newBook.customTag = customTag
         newBook.canUpdate = canUpdate
         newBook.readConfig = readConfig
-        delete(this)
-        appDb.bookDao.insert(newBook)
-    }
-
-    fun upInfoFromOld(oldBook: Book?) {
-        oldBook?.let {
-            group = oldBook.group
-            durChapterIndex = oldBook.durChapterIndex
-            durChapterPos = oldBook.durChapterPos
-            durChapterTitle = oldBook.durChapterTitle
-            customCoverUrl = oldBook.customCoverUrl
-            customIntro = oldBook.customIntro
-            order = oldBook.order
-            if (coverUrl.isNullOrEmpty()) {
-                coverUrl = oldBook.getDisplayCover()
-            }
-        }
+        return newBook
     }
 
     fun createBookMark(): Bookmark {
@@ -313,20 +312,19 @@ data class Book(
         }
     }
 
+    fun delete() {
+        if (ReadBook.book?.bookUrl == bookUrl) {
+            ReadBook.book = null
+        }
+        appDb.bookDao.delete(this)
+    }
+
     companion object {
         const val hTag = 2L
         const val rubyTag = 4L
         const val imgStyleDefault = "DEFAULT"
         const val imgStyleFull = "FULL"
         const val imgStyleText = "TEXT"
-
-        fun delete(book: Book?) {
-            book ?: return
-            if (ReadBook.book?.bookUrl == book.bookUrl) {
-                ReadBook.book = null
-            }
-            appDb.bookDao.delete(book)
-        }
     }
 
     @Parcelize

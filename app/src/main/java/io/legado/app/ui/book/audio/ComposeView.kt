@@ -28,11 +28,12 @@ fun TimerDialog(state: MutableState<Boolean>, parent: View) {
             Card(Modifier.fillMaxWidth()) {
                 Slider(
                     modifier = Modifier.padding(horizontal = 16.dp),
-                    value = timeMinute.value.toFloat(), onValueChange = {
+                    value = timeMinute.value.toFloat(),
+                    onValueChange = {
                         timeMinute.value = it.toInt()
                         AudioPlay.setTimer(it.toInt())
                     },
-                    valueRange = 0f..180f
+                    valueRange = 0f..180f,
                 )
             }
         }

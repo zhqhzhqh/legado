@@ -10,6 +10,7 @@ object AppPattern {
 
     //匹配格式化后的图片格式
     val imgPattern: Pattern = Pattern.compile("<img[^>]*src=\"([^\"]*(?:\"[^>]+\\})?)\"[^>]*>")
+
     //dataURL图片类型
     val dataUriRegex = Regex("data:.*?;base64,(.*)")
 
@@ -22,7 +23,7 @@ object AppPattern {
     val debugMessageSymbolRegex = Regex("[⇒◇┌└≡]")
 
     //本地书籍支持类型
-    val bookFileRegex = Regex("(?i).*\\.(txt|epub|umd)")
+    val bookFileRegex = Regex(".*\\.(txt|epub|umd)", RegexOption.IGNORE_CASE)
 
     /**
      * 所有标点

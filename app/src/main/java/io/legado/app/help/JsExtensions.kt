@@ -10,6 +10,7 @@ import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppConst.dateFormat
 import io.legado.app.constant.AppLog
 import io.legado.app.data.entities.BaseSource
+import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.http.*
 import io.legado.app.model.Debug
 import io.legado.app.model.analyzeRule.AnalyzeUrl
@@ -33,6 +34,7 @@ import java.util.zip.ZipInputStream
 
 /**
  * js扩展类, 在js中通过java变量调用
+ * 添加方法，请更新文档/legado/app/src/main/assets/help/JsHelp.md
  * 所有对于文件的读写删操作都是相对路径,只能操作阅读缓存内的文件
  * /android/data/{package}/cache/...
  */
@@ -122,9 +124,25 @@ interface JsExtensions {
             BackstageWebView(
                 url = url,
                 html = html,
-                javaScript = js
+                javaScript = js,
+                headerMap = getSource()?.getHeaderMap(true),
+                tag =  getSource()?.getKey()
             ).getStrResponse().body
         }
+    }
+
+    /**
+     * 可从网络，本地文件(阅读私有缓存目录和书籍保存位置支持相对路径)导入JavaScript脚本
+     */
+    fun importScript(path: String): String {
+        val result = when {
+            path.startsWith("http") -> cacheFile(path) ?: ""
+            path.isContentScheme() -> DocumentUtils.readText(appCtx, Uri.parse(path))
+            path.startsWith("/storage") -> FileUtils.readText(path)
+            else -> readTxtFile(path)
+        }
+        if (result.isBlank()) throw NoStackTraceException("$path 内容获取失败或者为空")
+        return result
     }
 
     /**
@@ -507,6 +525,20 @@ interface JsExtensions {
             }
         }
         return contentArray.joinToString("")
+    }
+
+    /**
+     * 弹窗提示
+     */
+    fun toast(msg: Any?) {
+        appCtx.toastOnUi(msg.toString())
+    }
+
+    /**
+     * 弹窗提示 停留时间较长
+     */
+    fun longToast(msg: Any?) {
+        appCtx.longToastOnUi(msg.toString())
     }
 
     /**
